@@ -27,7 +27,7 @@ This repo is written as **learning documentation**.
 ```
 
 * Hypervisor: VMware
-* Networking: **VMnet8 (NAT)**
+* Networking: VMnet8 (NAT)
 * Manager IP: `192.168.x.x` (lab environment)
 
 ---
@@ -36,12 +36,14 @@ This repo is written as **learning documentation**.
 
 ### Ubuntu Version
 
-* ✅ **Ubuntu 22.04.5 LTS (Jammy Jellyfish)**
-* ❌ Ubuntu 24.04 LTS is **not supported** by Wazuh (dashboard fails)
+* **Ubuntu 22.04.5 LTS (Jammy Jellyfish)**
+* Ubuntu 24.04 LTS is **not supported** by Wazuh (dashboard fails)
+  * This was an error I encountered personally and had to downgrade from Ubuntu 24.04 to 22.04
+  * attach screenshot
 
 ### VM Resources
 
-* **RAM:** 4 GB minimum (8 GB recommended)
+* **RAM:** 8 GB recommended
 * **CPU:** 2 cores
 * **Disk:** 40 GB
 * **Network:** NAT (VMnet8)
@@ -53,20 +55,22 @@ This repo is written as **learning documentation**.
 ```bash
 curl -s https://packages.wazuh.com/4.12/wazuh-install.sh | sudo bash -a
 ```
+This command fetches the Wazuh 4.12 installer and executes it with administrative privileges to install and configure the Wazuh manager, indexer (OpenSearch), and web dashboard.
 
-Successful installation creates:
+After a successful installation, it should create:
 
 * `wazuh-manager`
 * `wazuh-indexer`
 * `wazuh-dashboard`
 
-Dashboard access:
+To access your Wazuh Dashboard, open Firefox on the Manager device and enter this into the URL box:
 
 ```
-https://<manager-ip>
+https://<manager-ip> 
 ```
+192.168.x.x for my case.
 
-Self‑signed certificate warnings are expected.
+Expect self‑signed certificate warnings. Just press advanced options and click proceed anyways.
 
 ---
 
