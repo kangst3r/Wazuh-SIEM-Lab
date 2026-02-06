@@ -1,18 +1,17 @@
-# 🛡️ Wazuh SIEM Lab (Ubuntu 22.04 + Windows Agent)
+# Wazuh SIEM Lab (Ubuntu 22.04 + Windows Agent)
 
-This repository documents my **end‑to‑end setup of a Wazuh SIEM lab**, including all debugging steps, common pitfalls, and fixes encountered during installation.
+This repository documents my end‑to‑end setup of a Wazuh SIEM lab, including all debugging steps, common pitfalls, and fixes encountered during installation.
 
 The goal of this project was to:
 
 * Deploy a **Wazuh Manager + Dashboard** on an Ubuntu VM
 * Enrol a **Windows machine as a Wazuh Agent**
-* Understand real‑world issues such as OS compatibility, networking, agent registration, and version mismatches
-
-This repo is written as **learning documentation**.
+* Understand potential real‑world issues I could run into when deploying endpoint monitoring systems.
+This repo is written as learning documentation.
 
 ---
 
-## 🧱 Architecture Overview
+## Architecture Overview
 
 ```
 [ Windows PC ]        (Wazuh Agent 4.12.x)
@@ -32,7 +31,7 @@ This repo is written as **learning documentation**.
 
 ---
 
-## ⚙️ VM Setup (Manager)
+## VM Setup (Manager)
 
 ### Ubuntu Version
 
@@ -50,7 +49,7 @@ This repo is written as **learning documentation**.
 
 ---
 
-## 📦 Installing Wazuh Manager + Dashboard
+## Installing Wazuh Manager + Dashboard
 
 ```bash
 curl -s https://packages.wazuh.com/4.12/wazuh-install.sh | sudo bash -a
@@ -59,9 +58,9 @@ This command fetches the Wazuh 4.12 installer and executes it with administrativ
 
 After a successful installation, it should create:
 
-* `wazuh-manager`
-* `wazuh-indexer`
-* `wazuh-dashboard`
+`wazuh-manager` <br>
+`wazuh-indexer` <br>
+`wazuh-dashboard` <br>
 
 To access your Wazuh Dashboard, open Firefox on the Manager device and enter this into the URL box:
 
@@ -74,30 +73,49 @@ Expect self‑signed certificate warnings. Just press advanced options and click
 
 ---
 
-## 🔍 Verifying Manager Services
+## Verifying Manager Services
 
+Execute the following commands on your Wazuh manager device:
 ```bash
 sudo systemctl status wazuh-manager
 sudo systemctl status wazuh-dashboard
 sudo ss -tulpn | grep 443
 ```
+You should get the following output respectively:
+
+`Loaded: loaded (/lib/systemd/system/wazuh-manager.service; enabled)
+Active: active (running)` <br>
+`
+Loaded: loaded (/lib/systemd/system/wazuh-dashboard.service; enabled)
+Active: active (running)
+` <br>
+`
+LISTEN 0      511        0.0.0.0:443      0.0.0.0:*    users:(("node",pid=1234,fd=20))
+` <br>
+
+This indicates that after installation, the Wazuh manager and dashboard services were verified to be running successfully. The dashboard was also confirmed to be listening on port 443, indicating that the web interface was accessible over HTTPS.
 
 ---
 
-## 🖥️ Windows Agent Setup
+## Windows Agent Setup
 
 ### Important Version Rule
 
-> ⚠️ **Wazuh agent and manager versions must match**
+> **Wazuh agent and manager versions must match**
 
 * Manager: **4.12.x**
 * Agent: **must also be 4.12.x**
 
-A newer agent (e.g. 4.14.x) will be rejected with:
-
+This was another issue that took me awhile to resolve, despite being connected to the Manager's IP, I simply could not see my Agent's device on my Wazuh Dashboard.
+I decided to check the manager logs live with this command executed into the Manager device:
+```bash
+sudo tail -f /var/ossec/logs/ossec.log
+```
+and the following log entry filled the terminal
 ```
 ERROR: Incompatible version for new agent
 ```
+After realising this, I could either downgrade my Agent or upgrade my Manager, I decided to downgrade my Agent as it was the most straightforward option for this case. Of course in reality in a professional setting i would upgrade so as to ensure the latest patches are installed for everything.
 
 ---
 
@@ -105,7 +123,7 @@ ERROR: Incompatible version for new agent
 
 1. Download **Wazuh Agent 4.12.x (Windows)** from:
 
-   * [https://packages.wazuh.com/4.12/windows/](https://packages.wazuh.com/4.12/windows/)
+   * [https://documentation.wazuh.com/4.12/installation-guide/wazuh-agent/wazuh-agent-package-windows.html](https://documentation.wazuh.com/4.12/installation-guide/wazuh-agent/wazuh-agent-package-windows.html)
 2. Run the `.msi` installer
 3. During install:
 
@@ -114,37 +132,38 @@ ERROR: Incompatible version for new agent
 
 ---
 
-## 🔑 Agent Registration (Manager Side)
+## Agent Registration (Manager Side)
 
+Run the following command into the terminal:
 ```bash
 sudo /var/ossec/bin/manage_agents
 ```
 
-Steps:
+After which follow the steps:
 
-1. `A` – Add agent
-2. Enter name + IP
-3. `E` – Extract key
+1. `A` – To add agent
+2. Enter name and IP
+3. `E` – To extract key
 4. Copy authentication key
 
 ---
 
-## 🔑 Agent Enrolment (Windows Side)
+## Agent Enrolment (Windows Side)
 
 1. Open **Wazuh Agent Manager**
 2. Paste authentication key
 3. Save
 4. Restart agent
 
-### Restarting the Windows Agent (recommended)
-
+Restart the agent with the following command:
 ```powershell
 Restart-Service WazuhSvc
 ```
 
 ---
 
-## 🔌 Connectivity Checks
+## Connectivity Checks
+After following these steps, the Agent should be successfully connected to the Manager, execute the following commands to check if there is a successful connection.
 
 ### From Windows → Manager
 
@@ -154,19 +173,24 @@ Test-NetConnection 192.168.x.x -Port 1514
 
 Must return:
 
-```
+`
 TcpTestSucceeded : True
-```
+`<br>
 
 ### On Manager
 
+Execute the following command:
 ```bash
 sudo ss -tulpn | grep 1514
 ```
+Must return: <br>
+`
+LISTEN 0      511        0.0.0.0:443      0.0.0.0:*    users:(("node",pid=1234,fd=20))
+` <br>
 
 ---
 
-## 📡 Confirming Agent Connection
+## Confirming Agent Connection
 
 ```bash
 sudo /var/ossec/bin/agent_control -lc
@@ -174,9 +198,9 @@ sudo /var/ossec/bin/agent_control -lc
 
 Expected output:
 
-```
+`
 ID: 003, WINDOWS-AGENT, Active
-```
+`<br>
 
 ---
 
