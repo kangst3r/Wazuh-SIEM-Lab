@@ -101,7 +101,7 @@ This indicates that after installation, the Wazuh manager and dashboard services
 
 ### Important Version Rule
 
-> **Wazuh agent and manager versions must match**
+**Wazuh agent and manager versions must match !!!**
 
 * Manager: **4.12.x**
 * Agent: **must also be 4.12.x**
@@ -115,6 +115,7 @@ and the following log entry filled the terminal
 ```
 ERROR: Incompatible version for new agent
 ```
+*insert screenshot
 After realising this, I could either downgrade my Agent or upgrade my Manager, I decided to downgrade my Agent as it was the most straightforward option for this case. Of course in reality in a professional setting i would upgrade so as to ensure the latest patches are installed for everything.
 
 ---
@@ -134,7 +135,7 @@ After realising this, I could either downgrade my Agent or upgrade my Manager, I
 
 ## Agent Registration (Manager Side)
 
-Run the following command into the terminal:
+Run the following command into the terminal to manager your agents:
 ```bash
 sudo /var/ossec/bin/manage_agents
 ```
