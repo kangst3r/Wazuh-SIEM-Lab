@@ -38,7 +38,7 @@ This repo is written as learning documentation.
 * **Ubuntu 22.04.5 LTS (Jammy Jellyfish)**
 * Ubuntu 24.04 LTS is **not supported** by Wazuh (dashboard fails)
   * This was an error I encountered personally and had to downgrade from Ubuntu 24.04 to 22.04
-  * attach screenshot
+<img src="screenshots/failed to install dashboard.png" width = "800" >
 
 ### VM Resources
 
@@ -112,10 +112,8 @@ I decided to check the manager logs live with this command executed into the Man
 sudo tail -f /var/ossec/logs/ossec.log
 ```
 and the following log entry filled the terminal
-```
-ERROR: Incompatible version for new agent
-```
-*insert screenshot
+
+<img src="screenshots/incompatible version.png" width = "800" >
 After realising this, I could either downgrade my Agent or upgrade my Manager, I decided to downgrade my Agent as it was the most straightforward option for this case. Of course in reality in a professional setting i would upgrade so as to ensure the latest patches are installed for everything.
 
 ---
