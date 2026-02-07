@@ -133,7 +133,7 @@ After realising this, I could either downgrade my Agent or upgrade my Manager, I
 
 ## Agent Registration (Manager Side)
 
-Run the following command into the terminal to manager your agents:
+Run the following command into the terminal to manage your agents:
 ```bash
 sudo /var/ossec/bin/manage_agents
 ```
