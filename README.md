@@ -37,7 +37,7 @@ This repo is written as learning documentation.
 
 * **Ubuntu 22.04.5 LTS (Jammy Jellyfish)**
 * Ubuntu 24.04 LTS is **not supported** by Wazuh (dashboard fails)
-  * This was an error I encountered personally and had to downgrade from Ubuntu 24.04 to 22.04
+  * This was an error I encountered personally and had to downgrade from Ubuntu 24.04 to 22.04. Using an unsupported version of Ubuntu resulted in the inability to download the Wazuh Dashboard.
 <img src="screenshots/failed to install dashboard.png" width = "800" >
 
 ### VM Resources
@@ -114,7 +114,7 @@ sudo tail -f /var/ossec/logs/ossec.log
 and the following log entry filled the terminal
 
 <img src="screenshots/incompatible version.png" width = "800" >
-After realising this, I could either downgrade my Agent or upgrade my Manager, I decided to downgrade my Agent as it was the most straightforward option for this case. Of course in reality in a professional setting i would upgrade so as to ensure the latest patches are installed for everything.
+After realising this, I could either downgrade my Agent or upgrade my Manager, I decided to downgrade my Agent as it was the most straightforward option for this case. Of course in reality in a professional setting I would upgrade to the latest supported version, so as to ensure the latest patches are installed.
 
 ---
 
@@ -200,88 +200,96 @@ Expected output:
 `
 ID: 003, WINDOWS-AGENT, Active
 `<br>
+You would now be able to view the Agent via the Wazuh Dashboard on the Manager's system.
 
 ---
 
-## 📊 Dashboard Validation
+## File Integrity Monitoring (FIM) on Windows
 
-* Navigate to **Agents**
-* Set time range to **Last 1 hour**
-* Generate Windows activity (log in/out, file changes)
-
-Events may take **1–5 minutes** to appear initially.
+After successfully setting up my Agent and Manager systems for my Wazuh SIEM Lab home lab, I decided to dive deeper into what could potentially be done within Wazuh.
+This section documents how I explored Wazuh's **File Integrity Monitoring (FIM)** and how I enabled it on the Windows Wazuh agent using **Syscheck**, allowing real-time detection of file creation, modification, and deletion events.
 
 ---
 
-## 🧨 Common Issues & Fixes
+### Objective
 
-### Dashboard not found
-
-* Cause: Unsupported OS (Ubuntu 24.04)
-* Fix: Reinstall on Ubuntu 22.04
-
-### Agent registered but not active
-
-* Cause: Agent service not running or blocked port
-* Fix: Restart agent + check port 1514
-
-### Incompatible version error
-
-* Cause: Agent newer than manager
-* Fix: Downgrade agent to match manager version
+During this project, I hoped to achieve the folowing:
+- Monitor a specific Windows directory in **real time**
+- Generate alerts in the Wazuh dashboard when files are created, modified, or deleted
+- Validate end-to-end visibility from **agent → manager → dashboard**
 
 ---
 
-## 📁 Repo Structure (Recommended)
+## Agent Configuration (Windows)
 
-```
-wazuh-siem-lab/
-├── README.md
-├── screenshots/
-│   ├── install/
-│   ├── dashboard/
-│   ├── agent/
-│   └── errors/
-├── notes/
-│   └── troubleshooting.md
-└── diagrams/
-    └── architecture.png
-```
+### Step 1: Locate the agent configuration file
 
-### Screenshot tips
-
-* Use **descriptive filenames**
-* Group by phase (install, agent, dashboard)
-* Reference screenshots directly in README
-
-Example:
-
-```md
-![Agent Active](screenshots/agent/agent-active.png)
+Open the following file on the Windows agent using Notepad **as Administrator**:
+```bash
+C:\Program Files (x86)\ossec-agent\ossec.conf
 ```
 
 ---
 
-## 🧠 Key Takeaways
+### Step 2: Enable real-time directory monitoring
 
-* OS compatibility matters in security tooling
-* Version mismatches are a real‑world failure mode
-* Logs are the fastest source of truth
-* SIEMs are resource‑intensive by design
+Inside the `<syscheck>` block, add the following entry:
 
----
+```bash
+<directories realtime="yes">C:\Users\abc\Test</directories>
+```
 
-## 📌 Next Improvements
-
-* Add Linux agent
-* Enable Windows Security Event Channel
-* Create custom Wazuh rules
-* Forward alerts to email / webhook
+Replace `C:\Users\abc\Test` with the location of the folder you want to monitor on your Agent.
+This enables **real-time monitoring** for the specified directory entered.
 
 ---
 
-## ✨ Author Notes
+### Step 3: Save and restart the Windows agent
 
-This project intentionally documents **mistakes and fixes**, because that is how real infrastructure work happens.
+After saving the configuration, remember to restart the agent to apply changes:
 
-If you are learning SIEMs or SOC tooling, you will encounter these issues too — this repo exists so you don’t have to rediscover them blindly.
+```powershell
+Restart-Service WazuhSvc
+```
+
+---
+
+## Verifying File Integrity Monitoring
+
+### Step 4: Confirm agent status
+
+In the Wazuh Dashboard:
+- Navigate to **Agents**
+- Ensure the Windows agent status is **Active**
+
+<img src="screenshots/agent active.png" width = "600" >
+
+---
+
+### Step 5: Trigger file system events
+
+In the monitored directory, example case (`C:\Users\abc\Test`), do any of the following:
+- Create a new file
+- Modify an existing file
+- Delete a file
+
+These actions should immediately generate Syscheck events in the Wazuh Dashboard (Manager).
+
+<img src="screenshots/syscheck event.png" width = "600" >
+
+---
+
+### Step 6: Validate alerts in the dashboard
+
+In the Wazuh Dashboard:
+- Navigate to **Integrity Monitoring**
+- Confirm that alerts corresponding to file changes appear
+
+<img src="screenshots/FIM alerts.png" width = "600" >
+<img src="screenshots/FIM event details.png" width = "600" >
+
+---
+
+## Conclusion
+
+Building this lab gave me hands-on experience with deploying and operating a real-world SIEM rather than just reading about one. I learned how OS compatibility, version alignment, networking, and agent–manager communication affect system reliability, and how to troubleshoot issues using logs instead of trial and error. Configuring features such as File Integrity Monitoring also helped me understand how SIEMs are actually used in practice. This experience helped me understand more about cybersecurity and SOC roles, where diagnosing broken pipelines, validating security controls, and understanding how alerts are generated are just as important as detecting threats themselves.
